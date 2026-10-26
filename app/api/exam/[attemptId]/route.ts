@@ -26,7 +26,7 @@ export async function GET(
 
     const { data: candidate, error: candidateError } = await supabase
       .from("candidate_sessions")
-      .select("id, payment_status, session_status, expires_at")
+      .select("id, access_type, payment_status, session_status, expires_at")
       .eq("session_token", hashToken(token))
       .gt("expires_at", new Date().toISOString())
       .maybeSingle();
@@ -38,12 +38,15 @@ export async function GET(
       );
     }
 
-    if (candidate.payment_status !== "paid") {
-      return NextResponse.json(
-        { error: "Payment must be confirmed before starting the exam." },
-        { status: 403 }
-      );
-    }
+    if (
+  candidate.access_type !== "free" &&
+  candidate.payment_status !== "paid"
+) {
+  return NextResponse.json(
+    { error: "Payment is required to access the full JAMB exam." },
+    { status: 402 }
+  );
+}
 
     const { data: attempt, error: attemptError } = await supabase
       .from("exam_attempts")

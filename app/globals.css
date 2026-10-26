@@ -2480,3 +2480,63 @@ body:has(.registration-v2-form) main > div {
   position: relative;
   clear: both;
 }
+
+/* Premium state dropdown styling */
+.registration-v2-form select {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 44px 0 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background-color: #ffffff !important;
+  color: #163b2b !important;
+  -webkit-text-fill-color: #163b2b !important;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+  cursor: pointer;
+  outline: none;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 5%);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.registration-v2-form select:hover {
+  border-color: #86a995;
+  background-color: #fcfdfc !important;
+}
+
+.registration-v2-form select:focus {
+  border-color: #166534;
+  background-color: #ffffff !important;
+  color: #163b2b !important;
+  -webkit-text-fill-color: #163b2b !important;
+  box-shadow: 0 0 0 4px rgb(22 101 52 / 12%);
+}
+
+.registration-v2-form select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background-color: #f3f4f6 !important;
+}
+
+.registration-v2-form select option {
+  background-color: #ffffff !important;
+  color: #163b2b !important;
+  padding: 12px;
+  font-weight: 500;
+}
+
+.registration-v2-form select option:checked {
+  background-color: #e8f3eb !important;
+  color: #14532d !important;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .registration-v2-form select {
+    transition: none;
+  }
+}
