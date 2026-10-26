@@ -74,7 +74,7 @@ export async function POST(
 
     const { data: candidate, error: candidateError } = await supabase
       .from("candidate_sessions")
-      .select("id, payment_status, expires_at")
+      .select("id, access_type, payment_status, expires_at")
       .eq("session_token", hashToken(token))
       .gt("expires_at", new Date().toISOString())
       .maybeSingle();
@@ -86,12 +86,15 @@ export async function POST(
       );
     }
 
-    if (candidate.payment_status !== "paid") {
-      return NextResponse.json(
-        { error: "Payment has not been confirmed." },
-        { status: 403 }
-      );
-    }
+    if (
+  candidate.access_type !== "free" &&
+  candidate.payment_status !== "paid"
+) {
+  return NextResponse.json(
+    { error: "Payment has not been confirmed." },
+    { status: 403 }
+  );
+}
 
     const { data: attempt, error: attemptError } = await supabase
       .from("exam_attempts")
