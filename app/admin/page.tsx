@@ -248,6 +248,14 @@ export default async function AdminDashboardPage() {
               <Icon name="clock" className="h-[18px] w-[18px]" />
               Import history
             </a>
+
+            <Link
+  href="/admin/candidates"
+  className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
+>
+  <span aria-hidden="true">👥</span>
+  <span>Registered Candidates</span>
+</Link>
           </nav>
         </div>
 
