@@ -6,6 +6,8 @@ import { useState } from "react";
 export type ReviewQuestion = {
   id: string;
   question_text: string;
+  passage: string | null;
+  instructions: string | null;
   options: { A: string; B: string; C: string; D: string };
   correct_option: "A" | "B" | "C" | "D" | null;
   explanation: string | null;
@@ -64,13 +66,15 @@ const [bulkError, setBulkError] = useState("");
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action,
-          question_text: question.question_text,
-          options: question.options,
-          correct_option: question.correct_option,
-          explanation: question.explanation,
-          review_note: question.review_note,
-        }),
+  action,
+  question_text: question.question_text,
+  passage: question.passage,
+  instructions: question.instructions,
+  options: question.options,
+  correct_option: question.correct_option,
+  explanation: question.explanation,
+  review_note: question.review_note,
+}),
       });
 
       const result = await response.json();
@@ -236,6 +240,49 @@ const [bulkError, setBulkError] = useState("");
                 className="w-full rounded-xl border border-[#DCE5DD] bg-white p-3 text-sm leading-6 outline-none focus:border-[#398052] focus:ring-2 focus:ring-[#398052]/15"
               />
             </div>
+            <div className="rounded-xl border border-[#DCE5DD] bg-[#F7FAF7] p-4">
+  <label className="mb-2 block text-sm font-semibold">
+    Reading passage (optional)
+  </label>
+  <p className="mb-2 text-xs leading-5 text-[#718076]">
+    Enter the passage candidates must read. Leave blank if this question
+    does not require a passage.
+  </p>
+  <textarea
+    value={question.passage ?? ""}
+    onChange={(event) =>
+      updateQuestion(question.id, {
+        passage: event.target.value,
+      })
+    }
+    rows={6}
+    maxLength={30000}
+    placeholder="Paste the reading passage here..."
+    className="w-full rounded-xl border border-[#DCE5DD] bg-white p-3 text-sm leading-6 outline-none focus:border-[#398052] focus:ring-2 focus:ring-[#398052]/15"
+  />
+</div>
+
+<div className="rounded-xl border border-[#DCE5DD] bg-[#F7FAF7] p-4">
+  <label className="mb-2 block text-sm font-semibold">
+    Instructions (optional)
+  </label>
+  <p className="mb-2 text-xs leading-5 text-[#718076]">
+    Enter directions such as "Read the passage and answer questions 1–5"
+    or "Choose the option opposite in meaning to the underlined word."
+  </p>
+  <textarea
+    value={question.instructions ?? ""}
+    onChange={(event) =>
+      updateQuestion(question.id, {
+        instructions: event.target.value,
+      })
+    }
+    rows={3}
+    maxLength={10000}
+    placeholder="Enter instructions for candidates..."
+    className="w-full rounded-xl border border-[#DCE5DD] bg-white p-3 text-sm leading-6 outline-none focus:border-[#398052] focus:ring-2 focus:ring-[#398052]/15"
+  />
+</div>
 
             <div>
               <label className="mb-3 block text-sm font-semibold">

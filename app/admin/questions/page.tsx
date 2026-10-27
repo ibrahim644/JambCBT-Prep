@@ -19,8 +19,8 @@ export default async function QuestionReviewPage() {
   const { data, error } = await supabase
     .from("questions")
     .select(
-      "id, question_text, options, correct_option, explanation, source_file, needs_review, review_note, is_published"
-    )
+  "id, question_text, passage, instructions, options, correct_option, explanation, source_file, needs_review, review_note, is_published"
+)
     .eq("is_published", false)
     .order("needs_review", { ascending: false })
     .order("created_at", { ascending: true })

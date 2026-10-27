@@ -12,6 +12,8 @@ type UpdateBody = {
   correct_option?: OptionLetter | null;
   explanation?: string | null;
   review_note?: string | null;
+  passage?: string | null;
+  instructions?: string | null;
 };
 
 const letters: OptionLetter[] = ["A", "B", "C", "D"];
@@ -33,7 +35,9 @@ export async function PATCH(
     const { id } = await params;
 
     if (
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        id
+      )
     ) {
       return NextResponse.json(
         { error: "Invalid question ID." },
@@ -63,7 +67,9 @@ export async function PATCH(
 
     if (
       !body.options ||
-      !letters.every((letter) => typeof body.options?.[letter] === "string")
+      !letters.every(
+        (letter) => typeof body.options?.[letter] === "string"
+      )
     ) {
       return NextResponse.json(
         { error: "All four answer options must be provided." },
@@ -100,6 +106,30 @@ export async function PATCH(
     ) {
       return NextResponse.json(
         { error: "Invalid review note." },
+        { status: 400 }
+      );
+    }
+
+    if (
+      body.passage !== undefined &&
+      body.passage !== null &&
+      (typeof body.passage !== "string" ||
+        body.passage.length > 30000)
+    ) {
+      return NextResponse.json(
+        { error: "Passage must not exceed 30,000 characters." },
+        { status: 400 }
+      );
+    }
+
+    if (
+      body.instructions !== undefined &&
+      body.instructions !== null &&
+      (typeof body.instructions !== "string" ||
+        body.instructions.length > 10000)
+    ) {
+      return NextResponse.json(
+        { error: "Instructions must not exceed 10,000 characters." },
         { status: 400 }
       );
     }
@@ -144,6 +174,8 @@ export async function PATCH(
       options,
       correct_option: body.correct_option ?? null,
       explanation: body.explanation?.trim() || null,
+      passage: body.passage?.trim() || null,
+      instructions: body.instructions?.trim() || null,
       ...(body.action === "publish"
         ? {
             is_published: true,
@@ -161,7 +193,7 @@ export async function PATCH(
       .eq("id", id)
       .eq("is_published", false)
       .select(
-        "id, question_text, options, correct_option, explanation, needs_review, review_note, is_published"
+        "id, question_text, options, correct_option, explanation, passage, instructions, needs_review, review_note, is_published"
       )
       .maybeSingle();
 
