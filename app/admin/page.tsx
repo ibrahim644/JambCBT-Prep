@@ -1,9 +1,7 @@
 ﻿
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAdminUser } from "@/lib/admin-auth";
 import { supabase } from "@/lib/supabase";
-import AdminLogoutButton from "./admin-logout-button";
 
 export const dynamic = "force-dynamic";
 
@@ -172,115 +170,8 @@ export default async function AdminDashboardPage() {
       importsResult.error
   );
 
-  const displayName = user.email?.split("@")[0] ?? "Administrator";
-
   return (
-    <main className="min-h-screen bg-[#F4F7F4] text-[#183B2A] md:grid md:grid-cols-[252px_minmax(0,1fr)]">
-      {/* Sidebar */}
-      <aside className="flex flex-col bg-[#123D2B] text-white md:sticky md:top-0 md:h-screen">
-        <div className="flex items-center gap-3 border-b border-white/10 px-5 py-5 sm:px-7 md:px-6">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-[#174B33] shadow-sm">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              className="h-6 w-6"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="m3 8 9-4.5L21 8l-9 4.5L3 8Z" />
-              <path d="M6 10v5c3.6 2.7 8.4 2.7 12 0v-5M21 8v6" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-base font-bold tracking-tight">JAMB CBT</p>
-            <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.19em] text-[#B9D8C2]">
-              Administration
-            </p>
-          </div>
-        </div>
-
-        <div className="px-4 pt-6">
-          <p className="px-3 pb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">
-            Workspace
-          </p>
-          <nav className="flex flex-wrap gap-2 md:flex-col">
-            <Link
-              href="/admin"
-              className="flex items-center gap-3 rounded-xl bg-white/12 px-3.5 py-3 text-sm font-semibold text-white ring-1 ring-white/10"
-            >
-              <Icon name="grid" className="h-[18px] w-[18px]" />
-              Dashboard
-              <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#B9D8C2]" />
-            </Link>
-
-            
-<Link
-  href="/admin/questions"
-  className="flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm text-white/75 transition hover:bg-white/10 hover:text-white"
->
-  <Icon name="book" className="h-[18px] w-[18px]" />
-  Question review
-</Link>
-
-            <Link
-              href="/admin/import"
-              className="flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm text-white/75 transition hover:bg-white/10 hover:text-white"
-            >
-              <Icon name="arrow" className="h-[18px] w-[18px]" />
-              Import PDF
-            </Link>
-
-            <Link
-              href="/admin/subjects"
-              className="flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm text-white/75 transition hover:bg-white/10 hover:text-white"
-            >
-              <Icon name="layers" className="h-[18px] w-[18px]" />
-              Subjects
-            </Link>
-
-            <a
-              href="#recent-imports"
-              className="flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm text-white/75 transition hover:bg-white/8 hover:text-white"
-            >
-              <Icon name="clock" className="h-[18px] w-[18px]" />
-              Import history
-            </a>
-
-            <Link
-  href="/admin/candidates"
-  className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
->
-  <span aria-hidden="true">👥</span>
-  <span>Registered Candidates</span>
-</Link>
-          </nav>
-        </div>
-
-        <div className="mt-6 border-t border-white/10 px-4 pt-5 md:mt-auto md:mb-5">
-          <div className="mb-4 flex items-center gap-3 rounded-xl bg-white/[0.06] p-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#DCEBE0] text-sm font-bold uppercase text-[#174B33]">
-              {displayName.charAt(0)}
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-white">
-                {displayName}
-              </p>
-              <p className="mt-0.5 text-xs text-white/50">Administrator</p>
-            </div>
-          </div>
-          <AdminLogoutButton />
-          <p className="mt-5 px-1 text-[10px] leading-5 text-white/35">
-            JAMB CBT Administration
-            <br />
-            Secure content management
-          </p>
-        </div>
-      </aside>
-
-      {/* Main content */}
+    <main className="min-h-screen bg-[#F4F7F4] text-[#183B2A]">
       <div className="min-w-0">
         <header className="border-b border-[#E5EBE6] bg-white/90 px-5 py-5 sm:px-8 lg:px-10">
           <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-4">
@@ -529,6 +420,4 @@ export default async function AdminDashboardPage() {
     </main>
   );
 }
-
-
 
