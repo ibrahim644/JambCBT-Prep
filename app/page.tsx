@@ -132,7 +132,7 @@ export default function Home() {
               href="/admissions/directory"
               className="transition hover:text-[#173F2B]"
             >
-              Schools
+              Tetiaries
             </Link>
             <Link
               href="/admissions/eligibility"
