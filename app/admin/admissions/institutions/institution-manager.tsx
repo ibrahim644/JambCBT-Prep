@@ -86,6 +86,7 @@ export default function InstitutionManager({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -126,6 +127,62 @@ export default function InstitutionManager({
     }
   }
 
+async function togglePublication(item: InstitutionItem) {
+  const nextStatus = !item.is_published;
+
+  const confirmed = window.confirm(
+    nextStatus
+      ? `Publish ${item.name}? It will become available to public visitors.`
+      : `Unpublish ${item.name}? It will be hidden from public visitors.`
+  );
+
+  if (!confirmed) return;
+
+  setUpdatingId(item.id);
+  setError("");
+  setMessage("");
+
+  try {
+    const response = await fetch("/api/admin/admissions/institutions", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: item.id,
+        is_published: nextStatus,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || "Could not update publication status.");
+    }
+
+    setInstitutions((current) =>
+      current.map((institution) =>
+        institution.id === item.id
+          ? (result.institution as InstitutionItem)
+          : institution
+      )
+    );
+
+    setMessage(
+      nextStatus
+        ? `${item.name} published successfully.`
+        : `${item.name} unpublished successfully.`
+    );
+  } catch (caught) {
+    setError(
+      caught instanceof Error
+        ? caught.message
+        : "Something went wrong."
+    );
+  } finally {
+    setUpdatingId(null);
+  }
+}
+
+
   const published = institutions.filter((item) => item.is_published).length;
   const verified = institutions.filter((item) => item.jamb_recognition_status === "verified").length;
 
@@ -150,7 +207,7 @@ export default function InstitutionManager({
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#568269]">New directory record</p>
         <h2 className="mt-2 text-xl font-extrabold">Add an institution</h2>
         <p className="mt-1 text-sm leading-6 text-[#68796F]">
-          New records remain unpublished until publication controls are implemented.
+          New records remain unpublished until their details and official sources are reviewed.
         </p>
 
         <form onSubmit={saveInstitution} className="mt-6 space-y-5">
@@ -288,11 +345,38 @@ export default function InstitutionManager({
                         {recognition[item.jamb_recognition_status] ?? item.jamb_recognition_status}
                       </span>
                     </td>
-                    <td className="px-5 py-4">
-                      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${item.is_published ? "bg-emerald-50 text-emerald-800" : "bg-slate-100 text-slate-700"}`}>
-                        {item.is_published ? "Published" : "Draft"}
-                      </span>
-                    </td>
+
+<td className="px-5 py-4">
+  <div className="flex flex-col items-start gap-3">
+    <span
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+        item.is_published
+          ? "bg-emerald-50 text-emerald-800"
+          : "bg-slate-100 text-slate-700"
+      }`}
+    >
+      {item.is_published ? "Published" : "Draft"}
+    </span>
+
+    <button
+      type="button"
+      onClick={() => togglePublication(item)}
+      disabled={updatingId !== null}
+      className={`rounded-lg px-4 py-2 text-xs font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${
+        item.is_published
+          ? "bg-red-600 hover:bg-red-700"
+          : "bg-[#174B33] hover:bg-[#103A27]"
+      }`}
+    >
+      {updatingId === item.id
+        ? "Updating..."
+        : item.is_published
+          ? "Unpublish"
+          : "Publish"}
+    </button>
+  </div>
+</td>
+
                   </tr>
                 ))}
               </tbody>
@@ -303,4 +387,3 @@ export default function InstitutionManager({
     </div>
   );
 }
-

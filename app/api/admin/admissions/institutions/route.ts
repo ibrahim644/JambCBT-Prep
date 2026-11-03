@@ -103,6 +103,16 @@ export async function POST(request: NextRequest) {
   const input = validation.data;
   const slug = slugify(input.name);
 
+  if (
+    input.jamb_recognition_status === "verified" &&
+    !input.verification_source_url
+  ) {
+    return jsonError(
+      "Add the official source URL before marking JAMB recognition as verified.",
+      400
+    );
+  }
+
   if (!slug) {
     return jsonError("The institution name cannot be converted into a valid slug.", 400);
   }
@@ -165,3 +175,80 @@ export async function POST(request: NextRequest) {
   );
 }
 
+export async function PATCH(request: NextRequest) {
+  const admin = await getAdminUser();
+
+  if (!admin) {
+    return jsonError("Unauthorized. Please sign in as an administrator.", 401);
+  }
+
+  let body: unknown;
+
+  try {
+    body = await request.json();
+  } catch {
+    return jsonError("Invalid JSON request.", 400);
+  }
+
+  const schema = z.object({
+    id: z.string().uuid(),
+    is_published: z.boolean(),
+  });
+
+  const validation = schema.safeParse(body);
+
+  if (!validation.success) {
+    return jsonError("Invalid institution publication details.", 400);
+  }
+
+  const { id, is_published } = validation.data;
+
+  if (is_published) {
+    const { data: institution, error: institutionError } = await supabase
+      .from("institutions")
+      .select("jamb_recognition_status, verification_source_url")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (institutionError) {
+      console.error("Institution publication lookup failed:", institutionError.message);
+      return jsonError("Could not verify the institution details.", 500);
+    }
+
+    if (!institution) {
+      return jsonError("Institution not found.", 404);
+    }
+
+    if (
+      institution.jamb_recognition_status === "verified" &&
+      !institution.verification_source_url
+    ) {
+      return jsonError(
+        "Add an official recognition source URL before publishing this institution as JAMB verified.",
+        400
+      );
+    }
+  }
+
+  const { data, error } = await supabase
+    .from("institutions")
+    .update({ is_published })
+    .eq("id", id)
+    .select(
+      "id, name, slug, institution_type, ownership, state, local_government_area, town, address, official_website, admissions_url, jamb_recognition_status, verification_source_url, last_verified_at, is_published, created_at"
+    )
+    .single();
+
+  if (error) {
+    console.error("Institution publication update failed:", error.message);
+    return jsonError("Could not update institution publication status.", 500);
+  }
+
+  return NextResponse.json({
+    success: true,
+    institution: data,
+    message: is_published
+      ? "Institution published successfully."
+      : "Institution unpublished successfully.",
+  });
+}

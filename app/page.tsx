@@ -86,7 +86,7 @@ export default function Home() {
   return (
     <main className="min-h-screen overflow-hidden bg-[#F7F8F2] text-[#14291F]">
       <header className="relative z-10 border-b border-[#E7EAE1] bg-[#F7F8F2]/95">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8 lg:px-12">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between px-5 py-5 sm:px-8 lg:px-12">
           <Link href="/" className="flex items-center gap-3" aria-label="JAMB Ready home">
   
 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#315D3B] bg-[#173F2B] text-[#FFFFFF] shadow-md shadow-[#173F2B]/20">
@@ -128,15 +128,52 @@ export default function Home() {
             <a className="transition hover:text-[#173F2B]" href="#features">Features</a>
             <a className="transition hover:text-[#173F2B]" href="#how-it-works">How it works</a>
             <a className="transition hover:text-[#173F2B]" href="#subjects">Subjects</a>
+            <Link
+              href="/admissions/directory"
+              className="transition hover:text-[#173F2B]"
+            >
+              Schools
+            </Link>
+            <Link
+              href="/admissions/eligibility"
+              className="transition hover:text-[#173F2B]"
+            >
+              Admissions
+            </Link>
+            <Link
+              href="/scholarship"
+              className="rounded-full border border-[#B9D8C2] bg-[#EAF1E3] px-4 py-2 text-[#245538] transition hover:bg-[#DCEBD5]"
+            >
+              Scholarship
+            </Link>
           </nav>
 
           <div className="flex items-center gap-3">
-            
             <Link
               href="/register"
               className="inline-flex items-center gap-2 rounded-full bg-[#173F2B] px-4 py-3 text-sm font-bold text-white shadow-[0_5px_14px_rgba(23,63,43,0.15)] transition hover:bg-[#245538] sm:px-5"
             >
               Get started <ArrowIcon />
+            </Link>
+          </div>
+          <div className="grid w-full grid-cols-3 gap-2 md:hidden">
+            <Link
+              href="/admissions/directory"
+              className="flex items-center justify-center rounded-full border border-[#B9D8C2] bg-white px-2 py-2.5 text-xs font-bold text-[#245538] transition hover:bg-[#EAF1E3]"
+            >
+              Schools
+            </Link>
+            <Link
+              href="/admissions/eligibility"
+              className="flex items-center justify-center rounded-full border border-[#B9D8C2] bg-white px-2 py-2.5 text-xs font-bold text-[#245538] transition hover:bg-[#EAF1E3]"
+            >
+              Checker
+            </Link>
+            <Link
+              href="/scholarship"
+              className="flex items-center justify-center gap-1 rounded-full border border-[#B9D8C2] bg-[#EAF1E3] px-2 py-2.5 text-xs font-bold text-[#245538] transition hover:bg-[#DCEBD5]"
+            >
+              Scholarship
             </Link>
           </div>
         </div>
@@ -469,4 +506,3 @@ export default function Home() {
     </main>
   );
 }
-

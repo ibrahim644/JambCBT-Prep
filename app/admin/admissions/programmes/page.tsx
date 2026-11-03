@@ -21,7 +21,7 @@ export default async function AdminProgrammesPage() {
         institution_id,
         course_name,
         course_slug,
-        faculty,
+        faculty:faculty_or_school,
         department,
         award_type,
         study_mode,

@@ -41,7 +41,7 @@ export async function GET() {
   const [programmeResult, institutionResult] = await Promise.all([
     supabase
       .from("admission_programmes")
-      .select("id, institution_id, course_name, course_slug, faculty, department, award_type, study_mode, duration_years, is_published, created_at")
+      .select("id, institution_id, course_name, course_slug, faculty:faculty_or_school, department, award_type, study_mode, duration_years, is_published, created_at")
       .order("course_name", { ascending: true }),
     supabase
       .from("institutions")
@@ -140,14 +140,14 @@ export async function POST(request: NextRequest) {
       institution_id: input.institution_id,
       course_name: input.course_name,
       course_slug: courseSlug,
-      faculty: input.faculty || null,
+      faculty_or_school: input.faculty || null,
       department: input.department || null,
       award_type: input.award_type || null,
       study_mode: input.study_mode || null,
       duration_years: input.duration_years ?? null,
       is_published: false,
     })
-    .select("id, institution_id, course_name, course_slug, faculty, department, award_type, study_mode, duration_years, is_published, created_at")
+    .select("id, institution_id, course_name, course_slug, faculty:faculty_or_school, department, award_type, study_mode, duration_years, is_published, created_at")
     .single();
 
   if (error) {
@@ -156,4 +156,92 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ success: true, programme: data }, { status: 201 });
+}
+
+export async function PATCH(request: NextRequest) {
+  const admin = await getAdminUser();
+
+  if (!admin) {
+    return jsonError("Unauthorized. Please sign in as an administrator.", 401);
+  }
+
+  let body: unknown;
+
+  try {
+    body = await request.json();
+  } catch {
+    return jsonError("Invalid JSON request.", 400);
+  }
+
+  const schema = z.object({
+    id: z.string().uuid(),
+    is_published: z.boolean(),
+  });
+
+  const validation = schema.safeParse(body);
+
+  if (!validation.success) {
+    return jsonError("Invalid programme publication details.", 400);
+  }
+
+  const { id, is_published } = validation.data;
+
+  // Confirm that the programme exists and retrieve its institution.
+  const { data: programme, error: lookupError } = await supabase
+    .from("admission_programmes")
+    .select("id, institution_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (lookupError) {
+    console.error("Programme lookup failed:", lookupError.message);
+    return jsonError("Could not find the programme.", 500);
+  }
+
+  if (!programme) {
+    return jsonError("Programme not found.", 404);
+  }
+
+  // A programme cannot be published under an unpublished institution.
+  if (is_published) {
+    const { data: institution, error: institutionError } = await supabase
+      .from("institutions")
+      .select("id, is_published")
+      .eq("id", programme.institution_id)
+      .maybeSingle();
+
+    if (institutionError) {
+      console.error("Institution publication check failed:", institutionError.message);
+      return jsonError("Could not verify the institution's publication status.", 500);
+    }
+
+    if (!institution || !institution.is_published) {
+      return jsonError(
+        "Publish the institution before publishing its programmes.",
+        400
+      );
+    }
+  }
+
+  const { data, error } = await supabase
+    .from("admission_programmes")
+    .update({ is_published })
+    .eq("id", id)
+    .select(
+      "id, institution_id, course_name, course_slug, faculty:faculty_or_school, department, award_type, study_mode, duration_years, is_published, created_at"
+    )
+    .single();
+
+  if (error) {
+    console.error("Programme publication update failed:", error.message);
+    return jsonError("Could not update programme publication status.", 500);
+  }
+
+  return NextResponse.json({
+    success: true,
+    programme: data,
+    message: is_published
+      ? "Programme published successfully."
+      : "Programme unpublished successfully.",
+  });
 }

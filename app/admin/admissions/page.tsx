@@ -122,7 +122,7 @@ export default async function AdmissionsDashboardPage() {
               Admissions Dashboard
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-[#68796F]">
-              Manage Nigeria's institution directory, admission requirements,
+              Manage Nigeria&apos;s institution directory, admission requirements,
               cut-off marks, and admission guidance content.
             </p>
           </div>
@@ -157,56 +157,44 @@ export default async function AdmissionsDashboardPage() {
         </section>
 
         <section className="mt-9 rounded-2xl border border-[#E5EBE6] bg-white p-5 shadow-sm sm:p-7">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#EFF6F0] text-2xl">
-              🛠️
-            </div>
-            <div>
-              <h2 className="text-lg font-bold">Next: admissions management tools</h2>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-[#68796F]">
-                This overview is connected to your database. The management
-                forms will be added next, beginning with institutions, followed
-                by programmes, admission requirements, cut-off marks, and blog
-                publishing.
-              </p>
-            </div>
+          <div>
+            <h2 className="text-lg font-bold">Admissions tools</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#68796F]">
+              Add institutions and programmes, then cite official sources and
+              verify requirements before publishing them to candidates.
+            </p>
           </div>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
               {
                 title: "Institution directory",
                 description: "Add institutions, ownership, locations, and official links.",
                 number: "01",
+                href: "/admin/admissions/institutions",
               },
               {
                 title: "Programmes and courses",
                 description: "Connect each course to its institution.",
                 number: "02",
+                href: "/admin/admissions/programmes",
               },
               {
                 title: "Requirements and cut-offs",
-                description: "Manage year-specific, source-verified admission data.",
+                description: "Add requirements, inspect sources, verify, and publish.",
                 number: "03",
+                href: "/admin/admissions/requirements",
               },
               {
-                title: "Eligibility checker data",
-                description: "Prepare verified rules for comparing candidate results.",
+                title: "Public admissions checker",
+                description: "Preview the published university and programme directory.",
                 number: "04",
-              },
-              {
-                title: "Blog and admission updates",
-                description: "Prepare articles for review and publication.",
-                number: "05",
-              },
-              {
-                title: "Verification records",
-                description: "Track sources and when admission information was checked.",
-                number: "06",
+                href: "/admissions/eligibility",
               },
             ].map((item) => (
-              <div
+              <Link
                 key={item.number}
+                href={item.href}
                 className="rounded-xl border border-[#E5EBE6] bg-[#FAFCFA] p-4"
               >
                 <div className="flex items-center gap-3">
@@ -220,7 +208,7 @@ export default async function AdmissionsDashboardPage() {
                 <p className="mt-3 text-sm leading-6 text-[#68796F]">
                   {item.description}
                 </p>
-              </div>
+              </Link>
             ))}
           </div>
         </section>

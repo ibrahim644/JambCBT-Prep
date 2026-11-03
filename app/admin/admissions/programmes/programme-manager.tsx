@@ -1,4 +1,5 @@
-﻿"use client";
+﻿
+"use client";
 
 import { useMemo, useState, useTransition, type FormEvent } from "react";
 
@@ -48,6 +49,7 @@ export default function ProgrammeManager({
   const [search, setSearch] = useState("");
   const [institutionFilter, setInstitutionFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+
   const [courseName, setCourseName] = useState("");
   const [institutionId, setInstitutionId] = useState("");
   const [faculty, setFaculty] = useState("");
@@ -55,12 +57,17 @@ export default function ProgrammeManager({
   const [awardType, setAwardType] = useState("Bachelor's Degree");
   const [studyMode, setStudyMode] = useState("Full-time");
   const [duration, setDuration] = useState("4");
+
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const institutionMap = useMemo(
-    () => new Map(institutions.map((institution) => [institution.id, institution])),
+    () =>
+      new Map(
+        institutions.map((institution) => [institution.id, institution])
+      ),
     [institutions]
   );
 
@@ -69,6 +76,7 @@ export default function ProgrammeManager({
 
     return programmes.filter((programme) => {
       const institution = institutionMap.get(programme.institution_id);
+
       const matchesSearch =
         !term ||
         programme.course_name.toLowerCase().includes(term) ||
@@ -122,10 +130,12 @@ export default function ProgrammeManager({
         }
 
         const saved = result.programme as Programme;
+
         setProgrammes((current) => [
           saved,
           ...current.filter((item) => item.id !== saved.id),
         ]);
+
         setCourseName("");
         setFaculty("");
         setDepartment("");
@@ -140,22 +150,97 @@ export default function ProgrammeManager({
     });
   }
 
+  async function togglePublication(programme: Programme) {
+    const nextStatus = !programme.is_published;
+    const institution = institutionMap.get(programme.institution_id);
+
+    if (nextStatus && !institution?.is_published) {
+      setError(
+        "This programme cannot be published because its institution is unpublished. Publish the institution first."
+      );
+      setMessage("");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      nextStatus
+        ? `Publish ${programme.course_name} at ${institution?.name ?? "this institution"}?`
+        : `Unpublish ${programme.course_name}? It will no longer appear to public visitors.`
+    );
+
+    if (!confirmed) return;
+
+    setUpdatingId(programme.id);
+    setError("");
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/admin/admissions/programmes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: programme.id,
+          is_published: nextStatus,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.error || "Could not update programme publication status."
+        );
+      }
+
+      setProgrammes((current) =>
+        current.map((item) =>
+          item.id === programme.id
+            ? (result.programme as Programme)
+            : item
+        )
+      );
+
+      setMessage(
+        nextStatus
+          ? `${programme.course_name} has been published successfully.`
+          : `${programme.course_name} has been unpublished successfully.`
+      );
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Something went wrong. Please try again."
+      );
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
   const draftCount = programmes.filter((item) => !item.is_published).length;
   const publishedCount = programmes.filter((item) => item.is_published).length;
 
   return (
     <div className="space-y-8">
+      {/* Summary cards */}
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm font-medium text-slate-500">Total programmes</p>
+          <p className="text-sm font-medium text-slate-500">
+            Total programmes
+          </p>
           <p className="mt-2 text-3xl font-bold text-slate-900">
             {programmes.length}
           </p>
         </div>
+
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-          <p className="text-sm font-medium text-amber-800">Draft programmes</p>
-          <p className="mt-2 text-3xl font-bold text-amber-950">{draftCount}</p>
+          <p className="text-sm font-medium text-amber-800">
+            Draft programmes
+          </p>
+          <p className="mt-2 text-3xl font-bold text-amber-950">
+            {draftCount}
+          </p>
         </div>
+
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
           <p className="text-sm font-medium text-emerald-800">
             Published programmes
@@ -166,9 +251,12 @@ export default function ProgrammeManager({
         </div>
       </div>
 
+      {/* Add programme form */}
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-100 bg-slate-50 px-6 py-5">
-          <h2 className="text-xl font-bold text-slate-900">Add a programme</h2>
+          <h2 className="text-xl font-bold text-slate-900">
+            Add a programme
+          </h2>
           <p className="mt-1 text-sm text-slate-500">
             Select the institution and enter its course details.
           </p>
@@ -177,8 +265,8 @@ export default function ProgrammeManager({
         <form onSubmit={handleSubmit} className="space-y-5 p-6">
           {institutions.length === 0 ? (
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-              No institutions are available yet. Add institutions before adding
-              programmes.
+              No institutions are available yet. Add institutions before
+              adding programmes.
             </div>
           ) : (
             <>
@@ -186,6 +274,7 @@ export default function ProgrammeManager({
                 <label htmlFor="programme-institution" className={labelClass}>
                   Institution *
                 </label>
+
                 <select
                   id="programme-institution"
                   className={inputClass}
@@ -194,6 +283,7 @@ export default function ProgrammeManager({
                   required
                 >
                   <option value="">Choose an institution</option>
+
                   {institutions.map((institution) => (
                     <option key={institution.id} value={institution.id}>
                       {institution.name}
@@ -259,7 +349,7 @@ export default function ProgrammeManager({
                     value={awardType}
                     onChange={(event) => setAwardType(event.target.value)}
                   >
-                    <option>Bachelor's Degree</option>
+                    <option>Bachelor&apos;s Degree</option>
                     <option>HND</option>
                     <option>ND</option>
                     <option>NCE</option>
@@ -331,14 +421,16 @@ export default function ProgrammeManager({
           >
             {isPending ? "Saving programme..." : "Save programme as draft"}
           </button>
+
           <p className="text-xs leading-5 text-slate-500">
             New programmes remain unpublished until reviewed. You can add
-            admission subjects, O&apos;Level requirements and cutoff marks in
-            the next stage.
+            their year-specific admission subjects, O&apos;Level requirements,
+            and cut-off marks in Admission Requirements.
           </p>
         </form>
       </section>
 
+      {/* Programme directory */}
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-100 px-6 py-5">
           <h2 className="text-xl font-bold text-slate-900">
@@ -384,6 +476,24 @@ export default function ProgrammeManager({
           </select>
         </div>
 
+        {error && (
+          <p
+            role="alert"
+            className="mx-5 mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+          >
+            {error}
+          </p>
+        )}
+
+        {message && (
+          <p
+            role="status"
+            className="mx-5 mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800"
+          >
+            {message}
+          </p>
+        )}
+
         {filteredProgrammes.length === 0 ? (
           <div className="px-6 py-14 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-2xl">
@@ -399,7 +509,9 @@ export default function ProgrammeManager({
         ) : (
           <div className="divide-y divide-slate-100">
             {filteredProgrammes.map((programme) => {
-              const institution = institutionMap.get(programme.institution_id);
+              const institution = institutionMap.get(
+                programme.institution_id
+              );
 
               return (
                 <article
@@ -410,9 +522,11 @@ export default function ProgrammeManager({
                     <h3 className="font-bold text-slate-900">
                       {programme.course_name}
                     </h3>
+
                     <p className="mt-1 text-sm text-emerald-800">
                       {institution?.name ?? "Institution unavailable"}
                     </p>
+
                     <p className="mt-1 text-xs text-slate-500">
                       {[
                         programme.faculty,
@@ -425,23 +539,46 @@ export default function ProgrammeManager({
                         .filter(Boolean)
                         .join(" · ") || "Additional details not supplied"}
                     </p>
+
                     {institution && (
                       <p className="mt-1 text-xs text-slate-400">
                         {institutionTypeLabel(institution.institution_type)}
                         {institution.state ? ` · ${institution.state}` : ""}
+                        {!institution.is_published
+                          ? " · Institution is unpublished"
+                          : ""}
                       </p>
                     )}
                   </div>
 
-                  <span
-                    className={`w-fit shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
-                      programme.is_published
-                        ? "bg-emerald-100 text-emerald-800"
-                        : "bg-amber-100 text-amber-800"
-                    }`}
-                  >
-                    {programme.is_published ? "Published" : "Draft"}
-                  </span>
+                  <div className="flex shrink-0 flex-col items-start gap-3 sm:items-end">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-bold ${
+                        programme.is_published
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-amber-100 text-amber-800"
+                      }`}
+                    >
+                      {programme.is_published ? "Published" : "Draft"}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => togglePublication(programme)}
+                      disabled={updatingId !== null || isPending}
+                      className={`rounded-lg px-5 py-2.5 text-xs font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                        programme.is_published
+                          ? "bg-red-600 hover:bg-red-700"
+                          : "bg-emerald-800 hover:bg-emerald-700"
+                      }`}
+                    >
+                      {updatingId === programme.id
+                        ? "Updating..."
+                        : programme.is_published
+                          ? "Unpublish"
+                          : "Publish"}
+                    </button>
+                  </div>
                 </article>
               );
             })}
